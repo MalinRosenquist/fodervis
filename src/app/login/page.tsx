@@ -27,8 +27,10 @@ export default function LoginPage() {
 
       if (error) {
         setErrorMsg(error.message);
+        console.error("Error during login:", error);
       }
     } catch (error) {
+      console.error("Error during login:", error);
       setErrorMsg("Ett fel uppstod vid inloggning.");
     } finally {
       setLoading(false);
