@@ -1,17 +1,26 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import LoginPage from "@/app/login/page";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
+const { replaceMock, signInMock } = vi.hoisted(() => ({
+  replaceMock: vi.fn(),
+  signInMock: vi.fn(),
+}));
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ replace: replaceMock }),
+}));
+
 vi.mock("@/lib/supabase", () => ({
-  supabase: {
-    auth: {
-      signInWithPassword: vi.fn(),
-    },
-  },
+  supabase: { auth: { signInWithPassword: signInMock } },
 }));
 
 describe("LoginPage", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it("renders email, password and a submit button", () => {
     render(<LoginPage />);
 
@@ -32,5 +41,17 @@ describe("LoginPage", () => {
 
     expect(emailInput).toHaveValue("test@example.com");
     expect(passwordInput).toHaveValue("password123");
+  });
+
+  it("redirects to /home after successful login", async () => {
+    signInMock.mockResolvedValue({ error: null });
+    const user = userEvent.setup();
+    render(<LoginPage />);
+
+    await user.type(screen.getByLabelText(/email/i), "test@example.com");
+    await user.type(screen.getByLabelText(/password/i), "password123");
+    await user.click(screen.getByRole("button", { name: /login/i }));
+
+    await waitFor(() => expect(replaceMock).toHaveBeenCalledWith("/home"));
   });
 });

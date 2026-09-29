@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
 export default function LoginPage() {
@@ -8,10 +9,12 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
+    setErrorMsg(null);
 
     if (!email || !password) {
       setErrorMsg("Vänligen fyll i både e-post och lösenord.");
@@ -28,7 +31,10 @@ export default function LoginPage() {
       if (error) {
         setErrorMsg(error.message);
         console.error("Error during login:", error);
+        return;
       }
+
+      router.replace("/home");
     } catch (error) {
       console.error("Error during login:", error);
       setErrorMsg("Ett fel uppstod vid inloggning.");
@@ -47,8 +53,9 @@ export default function LoginPage() {
         <label htmlFor="password">Password</label>
         <input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
         {errorMsg && <p style={{ color: "red" }}>{errorMsg}</p>}
-        {loading && <p>Loading...</p>}
-        <button type="submit">Login</button>
+        <button type="submit" disabled={loading}>
+          {loading ? "Loading..." : "Login"}
+        </button>
       </form>
     </>
   );
